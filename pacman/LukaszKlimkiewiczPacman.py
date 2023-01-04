@@ -13,7 +13,7 @@ class LukaszKlimkiewiczPacman(Pacman):
 
     WEIGHTS = np.array([])
 
-    def __init__(self, train=False, alpha=0.2, epsilon=0.25, discount=0.5, filename='weights.txt'):
+    def __init__(self, train=False, alpha=0.01, epsilon=0.25, discount=0.5, filename='weights.txt'):
         """
         DEFAULT PARAMETERS ARE CORRECT FOR EVALUATING AGENT
 
@@ -84,7 +84,7 @@ class LukaszKlimkiewiczPacman(Pacman):
         self.__on_finish()
 
     def on_death(self):
-        self.__update(reward=-1000)
+        self.__update(reward=-100)
         self.__on_finish()
 
     def __on_finish(self):
@@ -177,7 +177,34 @@ class LukaszKlimkiewiczPacman(Pacman):
             game_state.you['position'],
             [pacman_info['position'] for pacman_info in game_state.other_pacmans]
         )
-        return np.array([nearest_ghost_distance, nearest_pacman_distance])
+        nearest_big_point_distance = self.__get_distance_to_nearest(
+            game_state,
+            game_state.you['position'],
+            game_state.big_points
+        )
+        nearest_big_big_point_distance = self.__get_distance_to_nearest(
+            game_state,
+            game_state.you['position'],
+            game_state.big_big_points
+        )
+        nearest_phasing_point_distance = self.__get_distance_to_nearest(
+            game_state,
+            game_state.you['position'],
+            game_state.phasing_points
+        )
+        nearest_double_point_distance = self.__get_distance_to_nearest(
+            game_state,
+            game_state.you['position'],
+            game_state.double_points
+        )
+        nearest_indestructible_point_distance = self.__get_distance_to_nearest(
+            game_state,
+            game_state.you['position'],
+            game_state.indestructible_points
+        )
+        return np.array([nearest_ghost_distance, nearest_pacman_distance, nearest_big_point_distance,
+                         nearest_big_big_point_distance, nearest_phasing_point_distance, nearest_double_point_distance,
+                         nearest_indestructible_point_distance])
 
     def __get_distance_to_nearest(self, game_state, start_point, end_points):
         if len(end_points) == 0:
