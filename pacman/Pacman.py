@@ -47,15 +47,15 @@ class RandomPacman(Pacman):
         self.print_status = print_status
     def give_points(self, points):
         if self.print_status:
-            print(f"random pacman got {points} points")
+            pass
 
     def on_death(self):
         if self.print_status:
-            print("random pacman dead")
+            pass
 
     def on_win(self, result: Dict["Pacman", int]):
         if self.print_status:
-            print("random pacman won")
+            pass
 
     def make_move(self, game_state, invalid_move=False) -> Direction:
         return random.choice(list(Direction))  # it will make some valid move at some point
