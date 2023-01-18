@@ -1,19 +1,20 @@
 import random
+import dataclasses
 import numpy as np
 from typing import Dict
 from pathlib import Path
-from copy import deepcopy
 
 from .Pacman import Pacman
 from .Direction import Direction
 from .Helpers import can_move_in_direction, direction_to_new_position, find_path
+from .GameState import GameState
 
 
 class LukaszKlimkiewiczPacman(Pacman):
 
     WEIGHTS = np.array([])
 
-    def __init__(self, train=False, alpha=0.01, epsilon=0.25, discount=0.5, filename='weights.txt'):
+    def __init__(self, train=False, alpha=0.001, epsilon=0.25, discount=0.8, filename='weights.txt'):
         """
         DEFAULT PARAMETERS ARE CORRECT FOR EVALUATING AGENT
 
@@ -33,7 +34,6 @@ class LukaszKlimkiewiczPacman(Pacman):
         self.filename = filename
 
         self.__weights = self.__load_weights()
-        print(self.__weights)
         self.__game_states_history = []
         self.__actions_history = []
 
@@ -59,11 +59,10 @@ class LukaszKlimkiewiczPacman(Pacman):
             return None
 
     def make_move(self, game_state, invalid_move=False) -> Direction:
-        print('Position', game_state.you['position'])
         should_random = random.random() < self.epsilon
 
         if invalid_move:
-            print('Invalid move')
+            assert False
             action = random.choice(list(Direction))
         elif should_random:
             action = random.choice(self.__get_legal_actions(game_state))
@@ -79,8 +78,8 @@ class LukaszKlimkiewiczPacman(Pacman):
         self.__update(reward=points)
 
     def on_win(self, result: Dict["Pacman", int]):
-        reward = self.__get_reward_for_win(result)
-        self.__update(reward=reward)
+        # reward = self.__get_reward_for_win(result)
+        # self.__update(reward=reward)
         self.__on_finish()
 
     def on_death(self):
@@ -108,28 +107,27 @@ class LukaszKlimkiewiczPacman(Pacman):
         return my_score - best_op_score
 
     def __update(self, reward):
-        game_state = self.prev_game_state
-        next_game_state = self.last_game_state
+        state = self.prev_game_state
+        next_state = self.last_game_state
         action = self.last_action
 
-        if game_state is None or next_game_state is None:
+        if state is None or next_state is None:
             return
 
         if not self.train:
             return
 
-        features = self.__get_features_for_state_action(game_state, action)
+        features = self.__get_features_for_state_action(state, action)
 
         if self.__weights is None:
             self.__weights = np.random.random((len(features),))
 
-        delta = (reward + self.discount * self.__get_value(next_game_state)) - self.__get_qvalue(game_state, action)
+        delta = (reward + self.discount * self.__get_value(next_state)) - self.__get_qvalue(state, action)
         self.__weights += self.alpha * delta * features
 
     def __get_best_action(self, game_state):
         legal_actions = self.__get_legal_actions(game_state)
         qvalues = [self.__get_qvalue(game_state, action) for action in legal_actions]
-        print(qvalues)
         best_qvalue = max(qvalues)
         best_actions = [action for action, qvalue in zip(legal_actions, qvalues) if qvalue == best_qvalue]
         best_action = random.choice(best_actions)
@@ -162,60 +160,90 @@ class LukaszKlimkiewiczPacman(Pacman):
         return self.__get_features_for_state(next_game_state)
 
     def __get_state_after_action(self, game_state, action):
-        next_state = deepcopy(game_state)
+        next_state = self.__copy_game_state(game_state)
         next_state.you['position'] = direction_to_new_position(next_state.you['position'], action)
         return next_state
 
+    def __copy_game_state(self, game_state):
+        new_you = dict(game_state.you)
+        new_game_state = dataclasses.replace(game_state, you=new_you)
+        return new_game_state
+
     def __get_features_for_state(self, game_state):
-        nearest_ghost_distance = self.__get_distance_to_nearest(
-            game_state,
-            game_state.you['position'],
-            [ghost_info['position'] for ghost_info in game_state.ghosts]
-        )
-        nearest_pacman_distance = self.__get_distance_to_nearest(
-            game_state,
-            game_state.you['position'],
-            [pacman_info['position'] for pacman_info in game_state.other_pacmans]
-        )
-        nearest_big_point_distance = self.__get_distance_to_nearest(
-            game_state,
-            game_state.you['position'],
-            game_state.big_points
-        )
-        nearest_big_big_point_distance = self.__get_distance_to_nearest(
-            game_state,
-            game_state.you['position'],
-            game_state.big_big_points
-        )
-        nearest_phasing_point_distance = self.__get_distance_to_nearest(
-            game_state,
-            game_state.you['position'],
-            game_state.phasing_points
-        )
-        nearest_double_point_distance = self.__get_distance_to_nearest(
-            game_state,
-            game_state.you['position'],
-            game_state.double_points
-        )
-        nearest_indestructible_point_distance = self.__get_distance_to_nearest(
-            game_state,
-            game_state.you['position'],
-            game_state.indestructible_points
-        )
-        return np.array([nearest_ghost_distance, nearest_pacman_distance, nearest_big_point_distance,
-                         nearest_big_big_point_distance, nearest_phasing_point_distance, nearest_double_point_distance,
-                         nearest_indestructible_point_distance])
+        # nearest_ghost_distance = self.__get_distance_to_nearest(
+        #     game_state,
+        #     game_state.you['position'],
+        #     [ghost_info['position'] for ghost_info in game_state.ghosts]
+        # )
+        # nearest_pacman_distance = self.__get_distance_to_nearest(
+        #     game_state,
+        #     game_state.you['position'],
+        #     [pacman_info['position'] for pacman_info in game_state.other_pacmans]
+        # )
+        # nearest_big_point_distance = self.__get_distance_to_nearest(
+        #     game_state,
+        #     game_state.you['position'],
+        #     game_state.big_points
+        # )
+        # nearest_big_big_point_distance = self.__get_distance_to_nearest(
+        #     game_state,
+        #     game_state.you['position'],
+        #     game_state.big_big_points
+        # )
+        # nearest_phasing_point_distance = self.__get_distance_to_nearest(
+        #     game_state,
+        #     game_state.you['position'],
+        #     game_state.phasing_points
+        # )
+        # nearest_double_point_distance = self.__get_distance_to_nearest(
+        #     game_state,
+        #     game_state.you['position'],
+        #     game_state.double_points
+        # )
+        # nearest_indestructible_point_distance = self.__get_distance_to_nearest(
+        #     game_state,
+        #     game_state.you['position'],
+        #     game_state.indestructible_points
+        # )
 
-    def __get_distance_to_nearest(self, game_state, start_point, end_points):
+        nearest_ghost_distance = self.__get_feature_nearest_ghost_distance(game_state)
+        double_point_distance = self.__get_feature_double_point_distance(game_state)
+
+        return np.array([
+            nearest_ghost_distance,
+            double_point_distance,
+        ])
+
+    def __get_feature_nearest_ghost_distance(self, game_state):
+        ghost_positions = [ghost_info['position'] for ghost_info in game_state.ghosts]
+        distance = self.__get_distance_to_nearest(game_state.you['position'], ghost_positions)
+        max_distance = 20
+        norm_distance = min(max_distance, distance) / max_distance
+        rev_distance = 1 - norm_distance
+        return rev_distance
+
+    def __get_feature_double_point_distance(self, game_state):
+        is_active = game_state.you['double_points_timer'] is not None
+        if is_active:
+            return 1.0
+
+        distance = self.__get_distance_to_nearest(game_state.you['position'], game_state.double_points)
+        if distance is None:
+            return 0
+
+        max_distance = 15
+        norm_distance = min(max_distance, distance) / max_distance
+        rev_distance = 1 - norm_distance
+        return rev_distance
+
+    def __get_distance_to_nearest(self, start_point, end_points):
         if len(end_points) == 0:
-            return sum(game_state.board_size)
-
+            return None
         distances = []
         for end_point in end_points:
-            # distance = len(find_path(start_point, end_point, game_state.walls, game_state.board_size))
             distance = self.__get_distance(start_point, end_point)
             distances.append(distance)
-        return min(distances) / np.sum(game_state.board_size)
+        return min(distances)
 
     def __get_distance(self, start, end):
         return abs(start.x - end.x) + abs(start.y - end.y)

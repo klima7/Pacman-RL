@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from copy import deepcopy
 
 
 @dataclass
@@ -27,7 +26,7 @@ class Position:
 
 
 def clamp(val: Position, low: Position, high: Position):
-    returned = deepcopy(val)
+    returned = Position(val.x, val.y)
     if val.x < low.x:
         returned.x = low.x
     elif val.x > high.x:

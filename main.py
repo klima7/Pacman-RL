@@ -1,3 +1,5 @@
+import random
+
 from pacman.Ghost import Ghosts
 from pacman.Pacman import RandomPacman
 from pacman.Game import Game
@@ -41,7 +43,9 @@ board_big = ["wwwwwwwwwwwwwwwwwwwwwwwwwwww",
              "wp************************pw",
              "wwwwwwwwwwwwwwwwwwwwwwwwwwww"]
 
-for i in range(10):
+for i in range(100):
+    pacmans = [LukaszKlimkiewiczPacman(train=True), RandomPacman(), RandomPacman(), RandomPacman()]
+    random.shuffle(pacmans)
     game = Game(board_big, [Ghosts.RED, Ghosts.PINK, Ghosts.BLUE, Ghosts.ORANGE],
-                [LukaszKlimkiewiczPacman(train=False), RandomPacman(), RandomPacman(), RandomPacman()], True, delay=0)
-    print(game.run())
+                pacmans, True, delay=0)
+    game.run()
