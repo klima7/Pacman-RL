@@ -13,7 +13,7 @@ class LukaszKlimkiewiczPacman(Pacman):
 
     WEIGHTS = np.array([])
 
-    def __init__(self, train=False, alpha=0.001, epsilon=0.25, discount=0.8, filename='weights.txt'):
+    def __init__(self, train=False, alpha=0.001, epsilon=0.25, discount=0.6, filename='weights.txt'):
         """
         DEFAULT PARAMETERS ARE CORRECT FOR EVALUATING AGENT
 
@@ -36,6 +36,8 @@ class LukaszKlimkiewiczPacman(Pacman):
         self.__game_states_history = []
         self.__actions_history = []
 
+    # ------------------------ properties --------------------------
+
     @property
     def last_game_state(self):
         if len(self.__game_states_history) > 0:
@@ -57,6 +59,8 @@ class LukaszKlimkiewiczPacman(Pacman):
         else:
             return None
 
+    # ------------------------ pacman-api --------------------------
+
     def make_move(self, game_state, invalid_move=False) -> Direction:
         should_random = random.random() < self.epsilon
 
@@ -77,13 +81,13 @@ class LukaszKlimkiewiczPacman(Pacman):
         self.__update(reward=points)
 
     def on_win(self, result: Dict["Pacman", int]):
-        # reward = self.__get_reward_for_win(result)
-        # self.__update(reward=reward)
         self.__on_finish()
 
     def on_death(self):
         self.__update(reward=-50)
         self.__on_finish()
+
+    # ---------------- value-function-approximation-stuff ----------------
 
     def __on_finish(self):
         if self.train:
@@ -116,14 +120,12 @@ class LukaszKlimkiewiczPacman(Pacman):
         if not self.train:
             return
 
-        features = self.__get_features_for_state_action(state, action)
+        features = self.__get_features(state, action)
 
         if self.__weights is None:
-            # self.__weights = np.random.random((len(features),))
             self.__weights = np.zeros((len(features),))
 
         delta = (reward + self.discount * self.__get_value(next_state)) - self.__get_qvalue(state, action)
-        # print(self.alpha * delta * features)
         self.__weights += self.alpha * delta * features
 
     def __get_best_action(self, game_state):
@@ -151,31 +153,23 @@ class LukaszKlimkiewiczPacman(Pacman):
         return max([self.__get_qvalue(game_state, action) for action in possible_actions])
 
     def __get_qvalue(self, game_state, action):
-        features = self.__get_features_for_state_action(game_state, action)
+        features = self.__get_features(game_state, action)
         if self.__weights is None:
             self.__weights = np.random.random((len(features),))
         return self.__weights @ features
 
-    def __get_features_for_state_action(self, game_state, action):
+    # ------------------------- features ---------------------------
+
+    def __get_features(self, game_state, action):
         next_game_state = self.__get_state_after_action(game_state, action)
-        return self.__get_features_for_state(next_game_state)
 
-    def __get_state_after_action(self, game_state, action):
-        next_state = self.__copy_game_state(game_state)
-        next_state.you['position'] = direction_to_new_position(next_state.you['position'], action)
-        return next_state
-
-    def __copy_game_state(self, game_state):
-        new_you = dict(game_state.you)
-        new_game_state = dataclasses.replace(game_state, you=new_you)
-        return new_game_state
-
-    def __get_features_for_state(self, game_state):
-        nearest_ghost_distance = self.__get_feature_nearest_ghost_distance(game_state)
-        double_point_distance = self.__get_feature_double_point_distance(game_state)
-        big_points_distance = self.__get_feature_big_points_distance(game_state)
-        big_big_point_distance = self.__get_feature_big_big_points_distance(game_state)
-        indestructible_distance = self.__get_feature_indestructible_distance(game_state)
+        nearest_ghost_distance = self.__get_feature_nearest_ghost_distance(next_game_state)
+        double_point_distance = self.__get_feature_double_point_distance(next_game_state)
+        big_points_distance = self.__get_feature_big_points_distance(next_game_state)
+        big_big_point_distance = self.__get_feature_big_big_points_distance(next_game_state)
+        indestructible_distance = self.__get_feature_indestructible_distance(next_game_state)
+        points = self.__get_feature_points(next_game_state)
+        # connected_points = self.__get_feature_connected_points(game_state, action)
 
         return np.array([
             nearest_ghost_distance,
@@ -183,6 +177,8 @@ class LukaszKlimkiewiczPacman(Pacman):
             big_points_distance,
             big_big_point_distance,
             indestructible_distance,
+            # points,
+            # connected_points,
         ])
 
     def __get_feature_nearest_ghost_distance(self, game_state):
@@ -245,6 +241,32 @@ class LukaszKlimkiewiczPacman(Pacman):
         rev_distance = 1 - norm_distance
         return rev_distance
 
+    def __get_feature_points(self, game_state):
+        distance = self.__get_distance_to_nearest(game_state.you['position'], game_state.points)
+        if distance is None:
+            return 0
+
+        max_distance = 2
+        norm_distance = min(max_distance, distance) / max_distance
+        rev_distance = 1 - norm_distance
+        return rev_distance
+
+    def __get_feature_connected_points(self, game_state, action):
+        stuff = set()
+        stuff.update(game_state.points)
+
+    # -------------------- utility-functions -----------------------
+
+    def __get_state_after_action(self, game_state, action):
+        next_state = self.__copy_game_state(game_state)
+        next_state.you['position'] = direction_to_new_position(next_state.you['position'], action)
+        return next_state
+
+    def __copy_game_state(self, game_state):
+        new_you = dict(game_state.you)
+        new_game_state = dataclasses.replace(game_state, you=new_you)
+        return new_game_state
+
     def __get_distance_to_nearest(self, start_point, end_points):
         if len(end_points) == 0:
             return None
@@ -256,7 +278,6 @@ class LukaszKlimkiewiczPacman(Pacman):
 
     def __get_distance(self, start, end):
         return abs(start.x - end.x) + abs(start.y - end.y)
-
 
     def __is_timer_enabled(self, timer, min_bound=4):
         return timer is not None and timer > min_bound

@@ -45,7 +45,7 @@ board_big = ["wwwwwwwwwwwwwwwwwwwwwwwwwwww",
 
 
 plays_count = 300
-train = True
+train = False
 
 my_results = []
 for i in range(plays_count):
@@ -54,7 +54,7 @@ for i in range(plays_count):
     random.shuffle(pacmans)
 
     game = Game(board_big, [Ghosts.RED, Ghosts.PINK, Ghosts.BLUE, Ghosts.ORANGE],
-                pacmans, False, delay=0)
+                pacmans, True, delay=0)
 
     results = game.run()
     my_result = results[my_pacman]
