@@ -173,11 +173,11 @@ class LukaszKlimkiewiczPacman(Pacman):
 
         return np.array([
             nearest_ghost_distance,
-            double_point_distance,
-            big_points_distance,
-            big_big_point_distance,
-            indestructible_distance,
-            # points,
+            # double_point_distance,
+            # big_points_distance,
+            # big_big_point_distance,
+            # indestructible_distance,
+            points,
             # connected_points,
         ])
 
@@ -246,12 +246,12 @@ class LukaszKlimkiewiczPacman(Pacman):
         if distance is None:
             return 0
 
-        max_distance = 2
+        max_distance = 4
         norm_distance = min(max_distance, distance) / max_distance
         rev_distance = 1 - norm_distance
         return rev_distance
 
-    def __get_feature_connected_points(self, game_state, action):
+    def __get_feature_connected_points(self, game_state):
         stuff = set()
         stuff.update(game_state.points)
 

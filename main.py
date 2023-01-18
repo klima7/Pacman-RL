@@ -54,7 +54,7 @@ for i in range(plays_count):
     random.shuffle(pacmans)
 
     game = Game(board_big, [Ghosts.RED, Ghosts.PINK, Ghosts.BLUE, Ghosts.ORANGE],
-                pacmans, True, delay=0)
+                pacmans, False, delay=0)
 
     results = game.run()
     my_result = results[my_pacman]
