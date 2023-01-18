@@ -41,7 +41,7 @@ board_big = ["wwwwwwwwwwwwwwwwwwwwwwwwwwww",
              "wp************************pw",
              "wwwwwwwwwwwwwwwwwwwwwwwwwwww"]
 
-while True:
+for i in range(10):
     game = Game(board_big, [Ghosts.RED, Ghosts.PINK, Ghosts.BLUE, Ghosts.ORANGE],
-                [LukaszKlimkiewiczPacman(), RandomPacman(), RandomPacman(), RandomPacman()], True)
+                [LukaszKlimkiewiczPacman(train=False), RandomPacman(), RandomPacman(), RandomPacman()], True, delay=0)
     print(game.run())

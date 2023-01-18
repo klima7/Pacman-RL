@@ -84,7 +84,7 @@ class LukaszKlimkiewiczPacman(Pacman):
         self.__on_finish()
 
     def on_death(self):
-        self.__update(reward=-100)
+        self.__update(reward=-10)
         self.__on_finish()
 
     def __on_finish(self):
@@ -212,7 +212,10 @@ class LukaszKlimkiewiczPacman(Pacman):
 
         distances = []
         for end_point in end_points:
-            path = find_path(start_point, end_point, game_state.walls, game_state.board_size)
-            distance = len(path)
+            # distance = len(find_path(start_point, end_point, game_state.walls, game_state.board_size))
+            distance = self.__get_distance(start_point, end_point)
             distances.append(distance)
-        return min(distances)
+        return min(distances) / np.sum(game_state.board_size)
+
+    def __get_distance(self, start, end):
+        return abs(start.x - end.x) + abs(start.y - end.y)
