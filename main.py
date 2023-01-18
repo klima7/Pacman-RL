@@ -43,9 +43,21 @@ board_big = ["wwwwwwwwwwwwwwwwwwwwwwwwwwww",
              "wp************************pw",
              "wwwwwwwwwwwwwwwwwwwwwwwwwwww"]
 
-for i in range(100):
-    pacmans = [LukaszKlimkiewiczPacman(train=True), RandomPacman(), RandomPacman(), RandomPacman()]
+
+plays_count = 300
+train = True
+
+my_results = []
+for i in range(plays_count):
+    my_pacman = LukaszKlimkiewiczPacman(train=train)
+    pacmans = [my_pacman, RandomPacman(), RandomPacman(), RandomPacman()]
     random.shuffle(pacmans)
+
     game = Game(board_big, [Ghosts.RED, Ghosts.PINK, Ghosts.BLUE, Ghosts.ORANGE],
-                pacmans, True, delay=0)
-    game.run()
+                pacmans, False, delay=0)
+
+    results = game.run()
+    my_result = results[my_pacman]
+    my_results.append(my_result)
+    my_mean_result = sum(my_results) / len(my_results)
+    print(f'{i+1:7}/{plays_count:<7} {my_result:<10} {my_mean_result:.2f}')

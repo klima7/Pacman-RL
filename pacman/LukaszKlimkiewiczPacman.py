@@ -6,8 +6,7 @@ from pathlib import Path
 
 from .Pacman import Pacman
 from .Direction import Direction
-from .Helpers import can_move_in_direction, direction_to_new_position, find_path
-from .GameState import GameState
+from .Helpers import can_move_in_direction, direction_to_new_position
 
 
 class LukaszKlimkiewiczPacman(Pacman):
@@ -83,7 +82,7 @@ class LukaszKlimkiewiczPacman(Pacman):
         self.__on_finish()
 
     def on_death(self):
-        self.__update(reward=-10)
+        self.__update(reward=-50)
         self.__on_finish()
 
     def __on_finish(self):
@@ -120,9 +119,11 @@ class LukaszKlimkiewiczPacman(Pacman):
         features = self.__get_features_for_state_action(state, action)
 
         if self.__weights is None:
-            self.__weights = np.random.random((len(features),))
+            # self.__weights = np.random.random((len(features),))
+            self.__weights = np.zeros((len(features),))
 
         delta = (reward + self.discount * self.__get_value(next_state)) - self.__get_qvalue(state, action)
+        # print(self.alpha * delta * features)
         self.__weights += self.alpha * delta * features
 
     def __get_best_action(self, game_state):
@@ -170,51 +171,25 @@ class LukaszKlimkiewiczPacman(Pacman):
         return new_game_state
 
     def __get_features_for_state(self, game_state):
-        # nearest_ghost_distance = self.__get_distance_to_nearest(
-        #     game_state,
-        #     game_state.you['position'],
-        #     [ghost_info['position'] for ghost_info in game_state.ghosts]
-        # )
-        # nearest_pacman_distance = self.__get_distance_to_nearest(
-        #     game_state,
-        #     game_state.you['position'],
-        #     [pacman_info['position'] for pacman_info in game_state.other_pacmans]
-        # )
-        # nearest_big_point_distance = self.__get_distance_to_nearest(
-        #     game_state,
-        #     game_state.you['position'],
-        #     game_state.big_points
-        # )
-        # nearest_big_big_point_distance = self.__get_distance_to_nearest(
-        #     game_state,
-        #     game_state.you['position'],
-        #     game_state.big_big_points
-        # )
-        # nearest_phasing_point_distance = self.__get_distance_to_nearest(
-        #     game_state,
-        #     game_state.you['position'],
-        #     game_state.phasing_points
-        # )
-        # nearest_double_point_distance = self.__get_distance_to_nearest(
-        #     game_state,
-        #     game_state.you['position'],
-        #     game_state.double_points
-        # )
-        # nearest_indestructible_point_distance = self.__get_distance_to_nearest(
-        #     game_state,
-        #     game_state.you['position'],
-        #     game_state.indestructible_points
-        # )
-
         nearest_ghost_distance = self.__get_feature_nearest_ghost_distance(game_state)
         double_point_distance = self.__get_feature_double_point_distance(game_state)
+        big_points_distance = self.__get_feature_big_points_distance(game_state)
+        big_big_point_distance = self.__get_feature_big_big_points_distance(game_state)
+        indestructible_distance = self.__get_feature_indestructible_distance(game_state)
 
         return np.array([
             nearest_ghost_distance,
             double_point_distance,
+            big_points_distance,
+            big_big_point_distance,
+            indestructible_distance,
         ])
 
     def __get_feature_nearest_ghost_distance(self, game_state):
+        is_indestructible = self.__is_timer_enabled(game_state.you['is_indestructible'])
+        if is_indestructible:
+            return 0
+
         ghost_positions = [ghost_info['position'] for ghost_info in game_state.ghosts]
         distance = self.__get_distance_to_nearest(game_state.you['position'], ghost_positions)
         max_distance = 20
@@ -223,11 +198,45 @@ class LukaszKlimkiewiczPacman(Pacman):
         return rev_distance
 
     def __get_feature_double_point_distance(self, game_state):
-        is_active = game_state.you['double_points_timer'] is not None
+        is_active = self.__is_timer_enabled(game_state.you['double_points_timer'])
         if is_active:
             return 1.0
 
         distance = self.__get_distance_to_nearest(game_state.you['position'], game_state.double_points)
+        if distance is None:
+            return 0
+
+        max_distance = 15
+        norm_distance = min(max_distance, distance) / max_distance
+        rev_distance = 1 - norm_distance
+        return rev_distance
+
+    def __get_feature_indestructible_distance(self, game_state):
+        is_active = self.__is_timer_enabled(game_state.you['is_indestructible'])
+        if is_active:
+            return 1.0
+
+        distance = self.__get_distance_to_nearest(game_state.you['position'], game_state.indestructible_points)
+        if distance is None:
+            return 0
+
+        max_distance = 15
+        norm_distance = min(max_distance, distance) / max_distance
+        rev_distance = 1 - norm_distance
+        return rev_distance
+
+    def __get_feature_big_points_distance(self, game_state):
+        distance = self.__get_distance_to_nearest(game_state.you['position'], game_state.big_points)
+        if distance is None:
+            return 0
+
+        max_distance = 15
+        norm_distance = min(max_distance, distance) / max_distance
+        rev_distance = 1 - norm_distance
+        return rev_distance
+
+    def __get_feature_big_big_points_distance(self, game_state):
+        distance = self.__get_distance_to_nearest(game_state.you['position'], game_state.big_big_points)
         if distance is None:
             return 0
 
@@ -247,3 +256,7 @@ class LukaszKlimkiewiczPacman(Pacman):
 
     def __get_distance(self, start, end):
         return abs(start.x - end.x) + abs(start.y - end.y)
+
+
+    def __is_timer_enabled(self, timer, min_bound=4):
+        return timer is not None and timer > min_bound

@@ -210,13 +210,11 @@ class Game:
                 pygame.time.delay(self.delay)
 
             if not self.players:  # bye
-                print("you lost")
                 return self.final_scores
 
             if not self.points and not self.big_points:
                 for player in self.players:
                     player.on_win(self.final_scores)
-                print('you won')  # congrats!
                 return self.final_scores
 
             self.update_eatable_timers()
