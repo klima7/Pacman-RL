@@ -9,7 +9,7 @@ from .Direction import Direction
 from .Helpers import can_move_in_direction, direction_to_new_position
 
 
-class LukaszKlimkiewiczPacman(Pacman):
+class MyPacman(Pacman):
 
     WEIGHTS = np.array([])
 

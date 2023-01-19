@@ -3,7 +3,7 @@ import random
 from pacman.Ghost import Ghosts
 from pacman.Pacman import RandomPacman
 from pacman.Game import Game
-from pacman.LukaszKlimkiewiczPacman import LukaszKlimkiewiczPacman
+from pacman.MyPacman import MyPacman
 
 board = ["*   g",
          "gwww ",
@@ -49,7 +49,7 @@ train = False
 
 my_results = []
 for i in range(plays_count):
-    my_pacman = LukaszKlimkiewiczPacman(train=train)
+    my_pacman = MyPacman(train=train)
     pacmans = [my_pacman, RandomPacman(), RandomPacman(), RandomPacman()]
     random.shuffle(pacmans)
 

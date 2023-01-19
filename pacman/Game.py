@@ -130,7 +130,7 @@ class Game:
 
         for player in self.players:
             color = (0, 0, 255) if player in self.eatable_timers else (255, 255, 0)
-            if type(player).__name__ == 'LukaszKlimkiewiczPacman':
+            if type(player).__name__ == 'MyPacman':
                 position = self.positions[player]
                 pos = (position.x * self.cell_size + self.player_size, position.y * self.cell_size + self.player_size)
                 pygame.draw.line(self.screen, (255, 0, 0), (pos[0], 0), (pos[0], 1000), width=3)
