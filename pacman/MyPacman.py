@@ -177,7 +177,7 @@ class MyPacman(Pacman):
             nearest_player_distance,
             # double_point_distance,
             # big_points_distance,
-            # big_big_point_distance,
+            big_big_point_distance,
             # indestructible_distance,
             points,
             # connected_points,
