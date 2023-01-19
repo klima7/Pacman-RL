@@ -48,16 +48,18 @@ plays_count = 300
 train = False
 
 my_results = []
+
 for i in range(plays_count):
     my_pacman = MyPacman(train=train)
     pacmans = [my_pacman, RandomPacman(), RandomPacman(), RandomPacman()]
     random.shuffle(pacmans)
 
     game = Game(board_big, [Ghosts.RED, Ghosts.PINK, Ghosts.BLUE, Ghosts.ORANGE],
-                pacmans, False, delay=0)
+                list(pacmans), False, delay=0)
 
     results = game.run()
     my_result = results[my_pacman]
     my_results.append(my_result)
+    this_op_results = [results[p] for p in pacmans if p != my_pacman]
     my_mean_result = sum(my_results) / len(my_results)
-    print(f'{i+1:7}/{plays_count:<7} {my_result:<10} {my_mean_result:.2f}')
+    print(f'{i+1:7}/{plays_count:<7} {my_result:<10} {my_mean_result:<12.2f} {this_op_results}')

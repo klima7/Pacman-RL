@@ -164,6 +164,7 @@ class MyPacman(Pacman):
         next_game_state = self.__get_state_after_action(game_state, action)
 
         nearest_ghost_distance = self.__get_feature_nearest_ghost_distance(next_game_state)
+        nearest_player_distance = self.__get_feature_nearest_player_distance(next_game_state)
         double_point_distance = self.__get_feature_double_point_distance(next_game_state)
         big_points_distance = self.__get_feature_big_points_distance(next_game_state)
         big_big_point_distance = self.__get_feature_big_big_points_distance(next_game_state)
@@ -173,6 +174,7 @@ class MyPacman(Pacman):
 
         return np.array([
             nearest_ghost_distance,
+            nearest_player_distance,
             # double_point_distance,
             # big_points_distance,
             # big_big_point_distance,
@@ -188,7 +190,19 @@ class MyPacman(Pacman):
 
         ghost_positions = [ghost_info['position'] for ghost_info in game_state.ghosts]
         distance = self.__get_distance_to_nearest(game_state.you['position'], ghost_positions)
-        max_distance = 20
+        max_distance = 5
+        norm_distance = min(max_distance, distance) / max_distance
+        rev_distance = 1 - norm_distance
+        return rev_distance
+
+    def __get_feature_nearest_player_distance(self, game_state):
+        is_indestructible = self.__is_timer_enabled(game_state.you['is_indestructible'])
+        if is_indestructible:
+            return 0
+
+        players_positions = [pacman_info['position'] for pacman_info in game_state.other_pacmans.values()]
+        distance = self.__get_distance_to_nearest(game_state.you['position'], players_positions) or 50
+        max_distance = 5
         norm_distance = min(max_distance, distance) / max_distance
         rev_distance = 1 - norm_distance
         return rev_distance
