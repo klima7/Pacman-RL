@@ -11,7 +11,12 @@ from .Helpers import can_move_in_direction, direction_to_new_position
 
 class MyPacman(Pacman):
 
-    WEIGHTS = np.array([])
+    WEIGHTS = np.array([
+        -2.265937313555067334e+00,
+        4.590623291792805816e-01,
+        - 3.692115722992823229e-02,
+        7.686145862592286271e-01,
+    ])
 
     def __init__(self, train=False, alpha=0.001, epsilon=0.25, discount=0.6, filename='weights.txt'):
         """
@@ -33,6 +38,7 @@ class MyPacman(Pacman):
         self.filename = filename
 
         self.__weights = self.__load_weights()
+        # self.__weights = self.WEIGHTS
         self.__game_states_history = []
         self.__actions_history = []
 
