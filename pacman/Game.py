@@ -132,6 +132,11 @@ class Game:
 
         for player in self.players:
             color = self.players_colors[player]
+            if type(player).__name__ == 'MyPacman':
+                position = self.positions[player]
+                pos = (position.x * self.cell_size, position.y * self.cell_size)
+                pygame.draw.line(self.screen, (255, 0, 0), (pos[0], 0), (pos[0], 1000), width=3)
+                pygame.draw.line(self.screen, (255, 0, 0), (0, pos[1]), (1000, pos[1]), width=3)
             position = self.positions[player]
             pygame.draw.rect(self.screen, color,
                              pygame.Rect(self.cell_size * position.x - self.player_size // 2, self.cell_size * position.y - self.player_size // 2, self.player_size, self.player_size))
@@ -203,13 +208,11 @@ class Game:
                 pygame.time.delay(self.delay)
 
             if not self.players:  # bye
-                print("you lost")
                 return self.final_scores
 
             if not self.points and not self.big_points:
                 for player in self.players:
                     player.on_win(self.final_scores)
-                print('you won')  # congrats!
                 return self.final_scores
 
             self.update_eatable_timers()
