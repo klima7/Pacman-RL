@@ -8,6 +8,7 @@ from .Pacman import Pacman
 from .Position import Position
 from .Direction import Direction
 from .GameState import GameState
+from copy import deepcopy
 from .Helpers import can_move_in_direction, direction_to_new_position
 
 BIG_POINT_VALUE = 5
@@ -29,19 +30,21 @@ def my_itemgetter(*items):
             return tuple(obj[item] for item in items)
     return g
 
-
 class Game:
     def __init__(self, board: List[str], ghosts: List[Ghost], players: List[Pacman], display_mode_on=False, delay=100):
         self.board = board
         self.display_mode_on = display_mode_on
         self.delay = delay
+        self.skip_ghosts = False
 
         self.players = players
+        self.all_players = players.copy()
+        self.players_colors = dict(zip(players, ['yellow', 'red', 'cyan', 'white']))
         self.ghosts = ghosts
 
         self.cell_size = 550 // (len(board[0]))
 
-        self.player_size = self.cell_size // 2
+        self.player_size = self.cell_size
         self.point_size = self.cell_size // 6
         self.big_point_size = self.cell_size // 3
         self.big_big_point_size = self.cell_size // 2
@@ -129,19 +132,10 @@ class Game:
                                                  self.cell_size))
 
         for player in self.players:
-            color = (0, 0, 255) if player in self.eatable_timers else (255, 255, 0)
-            if type(player).__name__ == 'MyPacman':
-                position = self.positions[player]
-                pos = (position.x * self.cell_size + self.player_size, position.y * self.cell_size + self.player_size)
-                pygame.draw.line(self.screen, (255, 0, 0), (pos[0], 0), (pos[0], 1000), width=3)
-                pygame.draw.line(self.screen, (255, 0, 0), (0, pos[1]), (1000, pos[1]), width=3)
+            color = self.players_colors[player]
             position = self.positions[player]
             pygame.draw.rect(self.screen, color,
-                             pygame.Rect(self.cell_size * position.x, self.cell_size * position.y, self.cell_size,
-                                         self.cell_size))
-            pygame.draw.rect(self.screen, color, pygame.Rect(position.x * self.cell_size + self.player_size // 2,
-                                                             position.y * self.cell_size + self.player_size // 2,
-                                                             self.player_size, self.player_size))
+                             pygame.Rect(self.cell_size * position.x - self.player_size // 2, self.cell_size * position.y - self.player_size // 2, self.player_size, self.player_size))
             self.screen.blit(self.player_image,
                              (position.x * self.cell_size - self.player_size // 2,
                               position.y * self.cell_size - self.player_size // 2))
@@ -210,11 +204,13 @@ class Game:
                 pygame.time.delay(self.delay)
 
             if not self.players:  # bye
+                print("you lost")
                 return self.final_scores
 
             if not self.points and not self.big_points:
                 for player in self.players:
                     player.on_win(self.final_scores)
+                print('you won')  # congrats!
                 return self.final_scores
 
             self.update_eatable_timers()
@@ -359,7 +355,9 @@ class Game:
             self.positions[player] = direction_to_new_position(self.positions[player], moves[player])
         for ghost in self.ghosts:
             old_positions[ghost] = self.positions[ghost]
-            self.positions[ghost] = direction_to_new_position(self.positions[ghost], self.directions[ghost])
+            if self.skip_ghosts:
+                self.positions[ghost] = direction_to_new_position(self.positions[ghost], self.directions[ghost])
+        self.skip_ghosts = not self.skip_ghosts
         return old_positions
 
     def update_ghost_movement_directions(self):
@@ -374,15 +372,17 @@ class Game:
         for player in self.players:
             other_players = player_info.copy()
             you = other_players.pop(player)
-            ghosts = ghost_info
-            points = self.points
-            big_points = self.big_points
-            big_big_points = self.big_big_points
-            indestructible_points = self.indestructible_points
-            double_points = self.double_points
-            phasing_points = self.phasing_points
-            walls = self.walls
-            board_size = self.board_size
+            other_players = deepcopy(list(other_players.values()))
+            you = deepcopy(you)
+            ghosts = deepcopy(ghost_info)
+            points = deepcopy(self.points)
+            big_points = deepcopy(self.big_points)
+            big_big_points = deepcopy(self.big_big_points)
+            indestructible_points = deepcopy(self.indestructible_points)
+            double_points = deepcopy(self.double_points)
+            phasing_points = deepcopy(self.phasing_points)
+            walls = deepcopy(self.walls)
+            board_size = deepcopy(self.board_size)
             game_state = GameState(you, other_players, ghosts, points, big_points, phasing_points, double_points, indestructible_points, big_big_points, walls, board_size)
             is_stuck = self.is_stuck(player)
             move = player.make_move(game_state)
