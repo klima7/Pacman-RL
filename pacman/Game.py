@@ -8,7 +8,6 @@ from .Pacman import Pacman
 from .Position import Position
 from .Direction import Direction
 from .GameState import GameState
-from copy import deepcopy
 from .Helpers import can_move_in_direction, direction_to_new_position
 
 BIG_POINT_VALUE = 5
@@ -372,17 +371,17 @@ class Game:
         for player in self.players:
             other_players = player_info.copy()
             you = other_players.pop(player)
-            other_players = deepcopy(list(other_players.values()))
-            you = deepcopy(you)
-            ghosts = deepcopy(ghost_info)
-            points = deepcopy(self.points)
-            big_points = deepcopy(self.big_points)
-            big_big_points = deepcopy(self.big_big_points)
-            indestructible_points = deepcopy(self.indestructible_points)
-            double_points = deepcopy(self.double_points)
-            phasing_points = deepcopy(self.phasing_points)
-            walls = deepcopy(self.walls)
-            board_size = deepcopy(self.board_size)
+            other_players = list(other_players.values())
+            you = you
+            ghosts = ghost_info
+            points = self.points
+            big_points = self.big_points
+            big_big_points = self.big_big_points
+            indestructible_points = self.indestructible_points
+            double_points = self.double_points
+            phasing_points = self.phasing_points
+            walls = self.walls
+            board_size = self.board_size
             game_state = GameState(you, other_players, ghosts, points, big_points, phasing_points, double_points, indestructible_points, big_big_points, walls, board_size)
             is_stuck = self.is_stuck(player)
             move = player.make_move(game_state)
