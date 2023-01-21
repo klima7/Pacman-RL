@@ -6,17 +6,18 @@ from pathlib import Path
 
 from .Pacman import Pacman
 from .Direction import Direction
+from .Position import Position
 from .Helpers import can_move_in_direction, direction_to_new_position
 
 
 class MyPacman(Pacman):
 
     WEIGHTS = np.array([
-        -1.291329562893505534e+00,
-        - 6.232950620455590673e-02,
-        8.918198435917576994e-01,
-        9.936622738675739974e-01
-
+        -6.720482570106112163e+00,
+        - 7.475425701978309911e-01,
+        2.163035985111412707e+00,
+        2.610195884745683537e-01,
+        3.038226300487901543e+00
     ])
 
     def __init__(self, train=False, alpha=0.001, epsilon=0.25, discount=0.6, filename='weights.txt'):
@@ -178,17 +179,31 @@ class MyPacman(Pacman):
         indestructible_distance = self.__get_feature_indestructible_distance(next_game_state)
         points = self.__get_feature_points(next_game_state)
         # connected_points = self.__get_feature_connected_points(game_state, action)
+        center_distance = self.__get_feature_center_distance(game_state)
 
         return np.array([
             nearest_ghost_distance,
             nearest_player_distance,
-            # double_point_distance,
+            double_point_distance,
             # big_points_distance,
             big_big_point_distance,
             # indestructible_distance,
             points,
             # connected_points,
+            # center_distance
         ])
+
+    def __get_feature_center_distance(self, game_state):
+        is_indestructible = self.__is_timer_enabled(game_state.you['is_indestructible'])
+        if is_indestructible:
+            return 0
+
+        center = Position(game_state.board_size[0] // 2, game_state.board_size[1] // 2)
+        distance = self.__get_distance(game_state.you['position'], center)
+        max_distance = 5
+        norm_distance = min(max_distance, distance) / max_distance
+        rev_distance = 1 - norm_distance
+        return rev_distance
 
     def __get_feature_nearest_ghost_distance(self, game_state):
         is_indestructible = self.__is_timer_enabled(game_state.you['is_indestructible'])
