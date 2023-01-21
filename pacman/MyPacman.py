@@ -12,10 +12,11 @@ from .Helpers import can_move_in_direction, direction_to_new_position
 class MyPacman(Pacman):
 
     WEIGHTS = np.array([
-        -7.512083492010653840e-01,
-        - 1.592026632218876761e-02,
-        8.717708325003715730e-01,
-        7.006975824477916781e-01,
+        -1.291329562893505534e+00,
+        - 6.232950620455590673e-02,
+        8.918198435917576994e-01,
+        9.936622738675739974e-01
+
     ])
 
     def __init__(self, train=False, alpha=0.001, epsilon=0.25, discount=0.6, filename='weights.txt'):
