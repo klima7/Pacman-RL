@@ -297,7 +297,7 @@ class MyPacman(Pacman):
 
     def __get_state_after_action(self, game_state, action):
         next_state = self.__copy_game_state(game_state)
-        next_state.you['position'] = direction_to_new_position(next_state.you['position'], action)
+        next_state.you['position'] = direction_to_new_position(next_state.you['position'], action, game_state.board_size)
         return next_state
 
     def __copy_game_state(self, game_state):
