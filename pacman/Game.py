@@ -330,6 +330,7 @@ class Game:
                             player] += ENEMY_VALUE * 1 if player not in self.double_points_timers else ENEMY_VALUE * 2
                     elif player not in self.indestructible_timers:
                         # don't crash into each other. (^^)
+                        print('Crash!!!!')
                         players_to_remove.append(player)
 
     def handle_players_eating_ghosts(self, old_positions, player, players_to_remove, points_to_give):
