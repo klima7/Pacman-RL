@@ -228,8 +228,11 @@ class MyPacman(Pacman):
         if is_indestructible:
             return 0
 
-        players_positions = [pacman_info['position'] for pacman_info in game_state.other_pacmans]
-        distance = self.__get_distance_to_nearest(game_state.you['position'], players_positions) or 50
+        players_positions = [pacman_info['position'] for pacman_info in game_state.other_pacmans if not pacman_info['is_eatable']]
+        if len(players_positions) == 0:
+            return 0
+
+        distance = self.__get_distance_to_nearest(game_state.you['position'], players_positions)
         max_distance = 5
         norm_distance = min(max_distance, distance) / max_distance
         rev_distance = 1 - norm_distance
