@@ -19,7 +19,8 @@ class MyPacman(Pacman):
         7.614505335938324126e-01,
         7.452751059796910438e-01,
         1.041097733534083858e+00,
-        1.782544304664715140e+00
+        1.782544304664715140e+00,
+        9.60131899792591523e+00,
     ])
 
     def __init__(self, train=False, alpha=0.001, epsilon=0.25, discount=0.6, filename='weights.txt'):
@@ -180,6 +181,7 @@ class MyPacman(Pacman):
         big_big_point_distance = self.__get_feature_big_big_points_distance(next_game_state)
         indestructible_distance = self.__get_feature_indestructible_distance(next_game_state)
         points = self.__get_feature_points(next_game_state)
+        nearest_eatable = self.__get_feature_nearest_eatable(next_game_state)
         # connected_points = self.__get_feature_connected_points(game_state, action)
         center_distance = self.__get_feature_center_distance(game_state)
 
@@ -191,9 +193,24 @@ class MyPacman(Pacman):
             big_big_point_distance,
             indestructible_distance,
             points,
+            nearest_eatable,
             # connected_points,
             # center_distance
         ])
+
+    def __get_feature_nearest_eatable(self, game_state):
+        eatable_ghosts = [ghost_info['position'] for ghost_info in game_state.ghosts if ghost_info['is_eatable']]
+        eatable_players = [player_info['position'] for player_info in game_state.other_pacmans if player_info['is_eatable']]
+        eatable_positions = eatable_ghosts + eatable_players
+
+        if len(eatable_positions) == 0:
+            return 0
+
+        distance = self.__get_distance_to_nearest(game_state.you['position'], eatable_positions)
+        max_distance = 10
+        norm_distance = min(max_distance, distance) / max_distance
+        rev_distance = 1 - norm_distance
+        return rev_distance
 
     def __get_feature_center_distance(self, game_state):
         is_indestructible = self.__is_timer_enabled(game_state.you['is_indestructible'])
@@ -212,7 +229,10 @@ class MyPacman(Pacman):
         if is_indestructible:
             return 0
 
-        ghost_positions = [ghost_info['position'] for ghost_info in game_state.ghosts]
+        ghost_positions = [ghost_info['position'] for ghost_info in game_state.ghosts if not ghost_info['is_eatable']]
+        if len(ghost_positions) == 0:
+            return 0
+
         distance = self.__get_distance_to_nearest(game_state.you['position'], ghost_positions)
         max_distance = 5
         norm_distance = min(max_distance, distance) / max_distance
