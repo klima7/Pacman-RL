@@ -182,8 +182,6 @@ class MyPacman(Pacman):
         indestructible_distance = self.__get_feature_indestructible_distance(next_game_state)
         points = self.__get_feature_points(next_game_state)
         nearest_eatable = self.__get_feature_nearest_eatable(next_game_state)
-        # connected_points = self.__get_feature_connected_points(game_state, action)
-        center_distance = self.__get_feature_center_distance(game_state)
 
         return np.array([
             nearest_ghost_distance,
@@ -194,8 +192,6 @@ class MyPacman(Pacman):
             indestructible_distance,
             points,
             nearest_eatable,
-            # connected_points,
-            # center_distance
         ])
 
     def __get_feature_nearest_eatable(self, game_state):
@@ -208,18 +204,6 @@ class MyPacman(Pacman):
 
         distance = self.__get_distance_to_nearest(game_state.you['position'], eatable_positions)
         max_distance = 10
-        norm_distance = min(max_distance, distance) / max_distance
-        rev_distance = 1 - norm_distance
-        return rev_distance
-
-    def __get_feature_center_distance(self, game_state):
-        is_indestructible = self.__is_timer_enabled(game_state.you['is_indestructible'])
-        if is_indestructible:
-            return 0
-
-        center = Position(game_state.board_size[0] // 2, game_state.board_size[1] // 2)
-        distance = self.__get_distance(game_state.you['position'], center)
-        max_distance = 5
         norm_distance = min(max_distance, distance) / max_distance
         rev_distance = 1 - norm_distance
         return rev_distance
@@ -308,10 +292,6 @@ class MyPacman(Pacman):
         norm_distance = min(max_distance, distance) / max_distance
         rev_distance = 1 - norm_distance
         return rev_distance
-
-    def __get_feature_connected_points(self, game_state):
-        stuff = set()
-        stuff.update(game_state.points)
 
     # -------------------- utility-functions -----------------------
 
