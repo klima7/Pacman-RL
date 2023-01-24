@@ -1,3 +1,4 @@
+import math
 import random
 import dataclasses
 import numpy as np
@@ -182,6 +183,7 @@ class MyPacman(Pacman):
         indestructible_distance = self.__get_feature_indestructible_distance(next_game_state)
         points = self.__get_feature_points(next_game_state)
         nearest_eatable = self.__get_feature_nearest_eatable(next_game_state)
+        # points_density = self.__get_feature_points_density(next_game_state, radius=3)
 
         return np.array([
             nearest_ghost_distance,
@@ -192,6 +194,7 @@ class MyPacman(Pacman):
             indestructible_distance,
             points,
             nearest_eatable,
+            # points_density
         ])
 
     def __get_feature_nearest_eatable(self, game_state):
@@ -295,6 +298,15 @@ class MyPacman(Pacman):
         norm_distance = min(max_distance, distance) / max_distance
         rev_distance = 1 - norm_distance
         return rev_distance
+
+    def __get_feature_points_density(self, game_state, radius):
+        start_pos = game_state.you['position']
+        distances = [self.__get_distance(start_pos, point_pos) for point_pos in game_state.points]
+        within_radius = [distance <= radius for distance in distances]
+        count = sum(within_radius)
+        max_count = math.pi * radius**2
+        density = count / max_count
+        return density
 
     # -------------------- utility-functions -----------------------
 
