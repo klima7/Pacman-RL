@@ -7,44 +7,31 @@ from pathlib import Path
 
 from .Pacman import Pacman
 from .Direction import Direction
-from .Position import Position
 from .Helpers import can_move_in_direction, direction_to_new_position
 
 
 class MyPacman(Pacman):
 
+    FILENAME = 'weights.txt'
+    ALPHA = 0.001
+    DISCOUNT = 0.5
+    EPSILON = 0.25
     WEIGHTS = np.array([
-        -3.066911983452018209e+00,
-        - 3.745601246559276953e-02,
-        1.657173240006799109e+00,
-        7.116642355887466964e-01,
-        3.860390549182495246e-01,
-        4.840435379321377241e-01,
-        1.561415871909519026e+00,
-        8.000289329392185067e-01,
+        -4.430258461434998019e+00,
+        - 3.910611617708708465e+00,
+        1.919687523672680252e+00,
+        9.040694667522453098e-01,
+        3.808879297365998506e-01,
+        5.893390637501405571e-01,
+        2.089721704209110076e+00,
+        2.668991925295206125e-0,
     ])
 
-    def __init__(self, train=False, alpha=0.001, epsilon=0.25, discount=0.6, filename='weights.txt'):
-        """
-        DEFAULT PARAMETERS ARE CORRECT FOR EVALUATING AGENT
-
-        params:
-        * train - whether agent should learn or not
-        * alpa - determines speed of learning (only when train is true)
-        * epsilon - specifies balance between exploration and exploitation (only when train is true)
-        * discount - trust to environment (only when train is true)
-        * filename - filename to load and save weights (only when train is true)
-        """
-
+    def __init__(self, train=False, use_predefined_weights=True):
         super().__init__()
         self.train = train
-        self.alpha = alpha if train else 0
-        self.epsilon = epsilon if train else 0
-        self.discount = discount if train else 0
-        self.filename = filename
-
-        self.__weights = self.__load_weights()
-        # self.__weights = self.WEIGHTS
+        self.use_predefined_weights = use_predefined_weights
+        self.__weights = self.WEIGHTS if use_predefined_weights else self.__load_weights()
         self.__game_states_history = []
         self.__actions_history = []
 
@@ -74,10 +61,10 @@ class MyPacman(Pacman):
     # ------------------------ pacman-api --------------------------
 
     def make_move(self, game_state, invalid_move=False) -> Direction:
-        should_random = random.random() < self.epsilon
+        epsilon = self.EPSILON if self.train else 0
+        should_random = random.random() < epsilon
 
         if invalid_move:
-            assert False
             action = random.choice(list(Direction))
         elif should_random:
             action = random.choice(self.__get_legal_actions(game_state))
@@ -106,14 +93,14 @@ class MyPacman(Pacman):
             self.__save_weights()
 
     def __load_weights(self):
-        path = Path(self.filename)
+        path = Path(self.FILENAME)
         if not path.exists():
             return None
         else:
-            return np.loadtxt(self.filename)
+            return np.loadtxt(self.FILENAME)
 
     def __save_weights(self):
-        np.savetxt(self.filename, self.__weights)
+        np.savetxt(self.FILENAME, self.__weights)
 
     def __get_reward_for_win(self, result):
         my_score = result[self]
@@ -137,8 +124,8 @@ class MyPacman(Pacman):
         if self.__weights is None:
             self.__weights = np.zeros((len(features),))
 
-        delta = (reward + self.discount * self.__get_value(next_state)) - self.__get_qvalue(state, action)
-        self.__weights += self.alpha * delta * features
+        delta = (reward + self.DISCOUNT * self.__get_value(next_state)) - self.__get_qvalue(state, action)
+        self.__weights += self.ALPHA * delta * features
 
     def __get_best_action(self, game_state):
         legal_actions = self.__get_legal_actions(game_state)
@@ -183,8 +170,6 @@ class MyPacman(Pacman):
         indestructible_distance = self.__get_feature_indestructible_distance(next_game_state)
         point_distance = self.__get_feature_point_distance(next_game_state)
         nearest_eatable = self.__get_feature_nearest_eatable(next_game_state)
-        # point_direction = self.__get_feature_point_direction(game_state, action)
-        # points_density = self.__get_feature_points_density(next_game_state, radius=3)
 
         return np.array([
             nearest_ghost_distance,
@@ -195,8 +180,6 @@ class MyPacman(Pacman):
             indestructible_distance,
             point_distance,
             nearest_eatable,
-            # point_direction,
-            # points_density,
         ])
 
     def __get_feature_nearest_eatable(self, game_state):

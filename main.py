@@ -51,7 +51,7 @@ gui = False
 my_results = []
 
 for i in range(plays_count):
-    my_pacman = MyPacman(train=train)
+    my_pacman = MyPacman()
     pacmans = [my_pacman, RandomPacman(), RandomPacman(), RandomPacman()]
     random.shuffle(pacmans)
 
