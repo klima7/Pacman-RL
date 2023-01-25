@@ -181,8 +181,9 @@ class MyPacman(Pacman):
         big_points_distance = self.__get_feature_big_points_distance(next_game_state)
         big_big_point_distance = self.__get_feature_big_big_points_distance(next_game_state)
         indestructible_distance = self.__get_feature_indestructible_distance(next_game_state)
-        points = self.__get_feature_points(next_game_state)
+        point_distance = self.__get_feature_point_distance(next_game_state)
         nearest_eatable = self.__get_feature_nearest_eatable(next_game_state)
+        # point_direction = self.__get_feature_point_direction(game_state, action)
         # points_density = self.__get_feature_points_density(next_game_state, radius=3)
 
         return np.array([
@@ -192,9 +193,10 @@ class MyPacman(Pacman):
             big_points_distance,
             big_big_point_distance,
             indestructible_distance,
-            points,
+            point_distance,
             nearest_eatable,
-            # points_density
+            # point_direction,
+            # points_density,
         ])
 
     def __get_feature_nearest_eatable(self, game_state):
@@ -289,7 +291,7 @@ class MyPacman(Pacman):
         rev_distance = 1 - norm_distance
         return rev_distance
 
-    def __get_feature_points(self, game_state):
+    def __get_feature_point_distance(self, game_state):
         distance = self.__get_distance_to_nearest(game_state.you['position'], game_state.points)
         if distance is None:
             return 0
@@ -298,6 +300,41 @@ class MyPacman(Pacman):
         norm_distance = min(max_distance, distance) / max_distance
         rev_distance = 1 - norm_distance
         return rev_distance
+
+    def __get_feature_point_direction(self, game_state, action):
+        directions = self.__get_legal_actions(game_state)
+        if len(directions) == 0:
+            return 0
+
+        if len(game_state.points) == 0:
+            return 0
+
+        distance = self.__get_distance_to_nearest(game_state.you['position'], game_state.points)
+        if distance < 4:
+            return 0
+
+        distances = {}
+
+        for direction in directions:
+            new_position = direction_to_new_position(game_state.you['position'], action, game_state.board_size)
+            distance = self.__get_distance_to_nearest(new_position, game_state.points)
+            distances[direction] = distance
+
+        best_distance = min(distances.values())
+        best_directions = [direction for direction, distance in distances.items() if distance == best_distance]
+
+        if action not in best_directions:
+            return 0
+
+        max_count = 234
+        remaining = len(game_state.points)
+        collected = max_count - remaining
+        strength = collected / max_count
+
+        if strength < 0.0:
+            return 0
+
+        return 1
 
     def __get_feature_points_density(self, game_state, radius):
         start_pos = game_state.you['position']
